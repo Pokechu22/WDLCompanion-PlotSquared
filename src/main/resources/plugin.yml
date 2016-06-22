@@ -1,0 +1,7 @@
+name: WDLCompanionPlotSquaredSupport
+main: wdl.plotsquared.PlotSquaredSupportPlugin
+version: 0.0.0
+author: Pokechu22
+depend: [WDLCompanion, PlotSquared]
+website: 
+description: 
