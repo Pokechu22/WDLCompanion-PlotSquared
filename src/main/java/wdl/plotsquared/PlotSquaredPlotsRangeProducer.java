@@ -33,8 +33,7 @@ public class PlotSquaredPlotsRangeProducer implements IRangeProducer {
 			
 			@Override
 			public boolean allowsPlot(Plot plot) {
-				// TODO: Check for ownership
-				return true;
+				return plot.isOwner(player.getUniqueId());
 			}
 		});
 		List<ProtectionRange> returned = new ArrayList<>();
