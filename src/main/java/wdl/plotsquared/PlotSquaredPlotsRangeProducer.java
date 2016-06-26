@@ -18,9 +18,11 @@ import com.intellectualcrafters.plot.object.PlotFilter;
 
 public class PlotSquaredPlotsRangeProducer implements IRangeProducer {
 	private final IRangeGroup rangeGroup;
+	private final OwnershipType ownershipType;
 	
-	public PlotSquaredPlotsRangeProducer(IRangeGroup group) {
+	public PlotSquaredPlotsRangeProducer(IRangeGroup group, OwnershipType ownershipType) {
 		this.rangeGroup = group;
+		this.ownershipType = ownershipType;
 	}
 
 	@Override
@@ -33,7 +35,7 @@ public class PlotSquaredPlotsRangeProducer implements IRangeProducer {
 			
 			@Override
 			public boolean allowsPlot(Plot plot) {
-				return plot.isOwner(player.getUniqueId());
+				return ownershipType.isValidPlotForPlayer(player, plot);
 			}
 		});
 		List<ProtectionRange> returned = new ArrayList<>();
