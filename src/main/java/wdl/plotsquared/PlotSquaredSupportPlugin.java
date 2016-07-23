@@ -53,6 +53,6 @@ public class PlotSquaredSupportPlugin extends JavaPlugin implements Listener {
 	
 	@EventHandler
 	public void registerRangeGroupTypes(RangeGroupTypeRegistrationEvent e) {
-		e.addRegistration("PlotSquared plots", new PlotSquaredPlotsRangeGroupType());
+		e.addRegistration("PlotSquared plots", new PlotSquaredPlotsRangeGroupType(this));
 	}
 }

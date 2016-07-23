@@ -5,6 +5,10 @@ import java.util.List;
 import java.util.Set;
 
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.HandlerList;
+import org.bukkit.event.Listener;
 
 import wdl.range.IRangeGroup;
 import wdl.range.IRangeProducer;
@@ -15,8 +19,10 @@ import com.intellectualcrafters.plot.object.ChunkLoc;
 import com.intellectualcrafters.plot.object.Plot;
 import com.intellectualcrafters.plot.object.PlotArea;
 import com.intellectualcrafters.plot.object.PlotFilter;
+import com.plotsquared.bukkit.events.PlayerClaimPlotEvent;
+import com.plotsquared.bukkit.events.PlotDeleteEvent;
 
-public class PlotSquaredPlotsRangeProducer implements IRangeProducer {
+public class PlotSquaredPlotsRangeProducer implements IRangeProducer, Listener {
 	private final IRangeGroup rangeGroup;
 	private final OwnershipType ownershipType;
 	
@@ -40,12 +46,19 @@ public class PlotSquaredPlotsRangeProducer implements IRangeProducer {
 		});
 		List<ProtectionRange> returned = new ArrayList<>();
 		for (Plot plot : plots) {
-			ChunkLoc bottom = plot.getBottomAbs().getChunkLoc();
-			ChunkLoc top = plot.getTopAbs().getChunkLoc();
-			String tag = getPlotTag(plot);
-			returned.add(new ProtectionRange(tag, bottom.x, bottom.z, top.x, top.z));
+			returned.add(convertPlot(plot));
 		}
 		return returned;
+	}
+	
+	/**
+	 * Converts a Plot into a ProtectionRange.
+	 */
+	private ProtectionRange convertPlot(Plot plot) {
+		ChunkLoc bottom = plot.getBottomAbs().getChunkLoc();
+		ChunkLoc top = plot.getTopAbs().getChunkLoc();
+		String tag = getPlotTag(plot);
+		return new ProtectionRange(tag, bottom.x, bottom.z, top.x, top.z);
 	}
 	
 	/**
@@ -66,7 +79,17 @@ public class PlotSquaredPlotsRangeProducer implements IRangeProducer {
 
 	@Override
 	public void dispose() {
-		
+		// Stop listening to events
+		HandlerList.unregisterAll(this);
 	}
-
+	
+	@EventHandler(priority=EventPriority.MONITOR, ignoreCancelled=true)
+	public void onPlotClaimed(PlayerClaimPlotEvent event) {
+		// Update appropriate players
+	}
+	
+	@EventHandler(priority=EventPriority.MONITOR, ignoreCancelled=true)
+	public void onPlotRemoved(PlotDeleteEvent event) {
+		// Update appropriate players
+	}
 }
