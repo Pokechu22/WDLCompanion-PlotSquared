@@ -2,8 +2,11 @@ package wdl.plotsquared;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 
 import org.bukkit.entity.Player;
 
@@ -23,12 +26,27 @@ public enum OwnershipType {
 		public boolean isValidPlotForPlayer(Player player, Plot plot) {
 			return plot.isOwner(player.getUniqueId());
 		}
+
+		@Override
+		public Set<UUID> getApplicablePlayers(Plot plot) {
+			HashSet<UUID> uuids = new HashSet<>();
+			uuids.addAll(plot.getOwners());
+			return uuids;
+		}
 	},
 	TRUSTED("trusted") {
 		@Override
 		public boolean isValidPlotForPlayer(Player player, Plot plot) {
 			return plot.isOwner(player.getUniqueId())
 					|| plot.getTrusted().contains(player.getUniqueId());
+		}
+
+		@Override
+		public Set<UUID> getApplicablePlayers(Plot plot) {
+			HashSet<UUID> uuids = new HashSet<>();
+			uuids.addAll(plot.getOwners());
+			uuids.addAll(plot.getTrusted());
+			return uuids;
 		}
 	},
 	MEMBER("member") {
@@ -38,11 +56,30 @@ public enum OwnershipType {
 					|| plot.getTrusted().contains(player.getUniqueId())
 					|| plot.getMembers().contains(player.getUniqueId());
 		}
+
+		@Override
+		public Set<UUID> getApplicablePlayers(Plot plot) {
+			HashSet<UUID> uuids = new HashSet<>();
+			uuids.addAll(plot.getOwners());
+			uuids.addAll(plot.getTrusted());
+			uuids.addAll(plot.getMembers());
+			return uuids;
+		}
 	},
 	ANY("any", "all") {
 		@Override
 		public boolean isValidPlotForPlayer(Player player, Plot plot) {
 			return plot.isAdded(player.getUniqueId());
+		}
+
+		@Override
+		public Set<UUID> getApplicablePlayers(Plot plot) {
+			HashSet<UUID> uuids = new HashSet<>();
+			uuids.addAll(plot.getOwners());
+			uuids.addAll(plot.getTrusted());
+			uuids.addAll(plot.getMembers());
+			// TODO: IsAdded also counts anyone who is not denied (?); this doesn't yet
+			return uuids;
 		}
 	};
 	
@@ -73,6 +110,12 @@ public enum OwnershipType {
 	 * region?
 	 */
 	public abstract boolean isValidPlotForPlayer(Player player, Plot plot);
+	/**
+	 * Gets a set of all players who meet the ownership criteria.
+	 * 
+	 * These players may not currently be online.
+	 */
+	public abstract Set<UUID> getApplicablePlayers(Plot plot);
 	
 	/**
 	 * Gets the OwnershipType with the given name or alias.

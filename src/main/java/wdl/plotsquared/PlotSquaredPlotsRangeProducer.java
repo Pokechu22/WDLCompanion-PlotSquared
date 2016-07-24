@@ -3,7 +3,10 @@ package wdl.plotsquared;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
+import org.bukkit.Bukkit;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -85,11 +88,27 @@ public class PlotSquaredPlotsRangeProducer implements IRangeProducer, Listener {
 	
 	@EventHandler(priority=EventPriority.MONITOR, ignoreCancelled=true)
 	public void onPlotClaimed(PlayerClaimPlotEvent event) {
-		// Update appropriate players
+		Plot plot = event.getPlot();
+		ProtectionRange range = convertPlot(plot);
+		World world = Bukkit.getWorld(plot.getArea().worldname);
+		Set<UUID> players = ownershipType.getApplicablePlayers(plot);
+		
+		world.getPlayers().stream()
+				.filter(p -> players.contains(p.getUniqueId()))
+				.forEach(p -> rangeGroup.addRanges(p, range));
 	}
 	
 	@EventHandler(priority=EventPriority.MONITOR, ignoreCancelled=true)
 	public void onPlotRemoved(PlotDeleteEvent event) {
-		// Update appropriate players
+		Plot plot = event.getPlot();
+		String tag = getPlotTag(plot);
+		World world = Bukkit.getWorld(plot.getArea().worldname);
+		Set<UUID> players = ownershipType.getApplicablePlayers(plot);
+		
+		world.getPlayers().stream()
+				.filter(p -> players.contains(p.getUniqueId()))
+				.forEach(p -> rangeGroup.removeRangesByTags(p, tag));
 	}
+	
+	
 }
