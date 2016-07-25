@@ -94,6 +94,7 @@ public class PlotSquaredPlotsRangeProducer implements IRangeProducer, Listener {
 		Set<UUID> players = ownershipType.getApplicablePlayers(plot);
 		
 		world.getPlayers().stream()
+				.filter(p -> rangeGroup.isWDLPlayer(p))
 				.filter(p -> players.contains(p.getUniqueId()))
 				.forEach(p -> rangeGroup.addRanges(p, range));
 	}
@@ -106,6 +107,7 @@ public class PlotSquaredPlotsRangeProducer implements IRangeProducer, Listener {
 		Set<UUID> players = ownershipType.getApplicablePlayers(plot);
 		
 		world.getPlayers().stream()
+				.filter(p -> rangeGroup.isWDLPlayer(p))
 				.filter(p -> players.contains(p.getUniqueId()))
 				.forEach(p -> rangeGroup.removeRangesByTags(p, tag));
 	}
