@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.bukkit.Bukkit;
 import org.bukkit.World;
@@ -22,8 +23,11 @@ import com.intellectualcrafters.plot.object.ChunkLoc;
 import com.intellectualcrafters.plot.object.Plot;
 import com.intellectualcrafters.plot.object.PlotArea;
 import com.intellectualcrafters.plot.object.PlotFilter;
+import com.intellectualcrafters.plot.object.PlotId;
 import com.plotsquared.bukkit.events.PlayerClaimPlotEvent;
 import com.plotsquared.bukkit.events.PlotDeleteEvent;
+import com.plotsquared.bukkit.events.PlotMergeEvent;
+import com.plotsquared.bukkit.events.PlotUnlinkEvent;
 
 public class PlotSquaredPlotsRangeProducer implements IRangeProducer, Listener {
 	private final IRangeGroup rangeGroup;
@@ -112,5 +116,65 @@ public class PlotSquaredPlotsRangeProducer implements IRangeProducer, Listener {
 				.forEach(p -> rangeGroup.removeRangesByTags(p, tag));
 	}
 	
+	/**
+	 * Resend all merged plots to account for changed border areas.
+	 */
+	@EventHandler(priority=EventPriority.MONITOR, ignoreCancelled=true)
+	public void onPlotMerge(PlotMergeEvent event) {
+		ArrayList<PlotId> plotIDs = event.getPlots();
+		PlotArea area = event.getPlot().getArea();
+		List<Plot> plots = plotIDs.stream()
+				.map(id -> PS.get().getPlot(area, id))
+				.collect(Collectors.toList());
+		List<ProtectionRange> ranges = plots.stream()
+				.map(plot -> convertPlot(plot))
+				.collect(Collectors.toList());
+		List<String> tags = plots.stream()
+				.map(plot -> getPlotTag(plot))
+				.collect(Collectors.toList());
+		
+		World world = event.getWorld();
+		Set<UUID> players = ownershipType.getApplicablePlayers(event.getPlot());
+		
+		world.getPlayers().stream()
+				.filter(p -> rangeGroup.isWDLPlayer(p))
+				.filter(p -> players.contains(p.getUniqueId()))
+				.forEach(p -> {
+					rangeGroup.removeRangesByTags(p, tags);
+					rangeGroup.addRanges(p, ranges);
+				});
+	}
 	
+	/**
+	 * Resend all unmerged plots to account for changed border areas.
+	 */
+	@EventHandler(priority=EventPriority.MONITOR, ignoreCancelled=true)
+	public void onPlotUnmerge(PlotUnlinkEvent event) {
+		ArrayList<PlotId> plotIDs = event.getPlots();
+		PlotArea area = event.getArea();
+		List<Plot> plots = plotIDs.stream()
+				.map(id -> PS.get().getPlot(area, id))
+				.collect(Collectors.toList());
+		List<ProtectionRange> ranges = plots.stream()
+				.map(plot -> convertPlot(plot))
+				.collect(Collectors.toList());
+		List<String> tags = plots.stream()
+				.map(plot -> getPlotTag(plot))
+				.collect(Collectors.toList());
+		
+		World world = event.getWorld();
+		// We use the first plot in the list for simplicity - they'll all have the
+		// same permissions at this point
+		// This does assume that there is at least one plot in the list, but for
+		// this type of event that seems reasonable
+		Set<UUID> players = ownershipType.getApplicablePlayers(plots.get(0));
+		
+		world.getPlayers().stream()
+				.filter(p -> rangeGroup.isWDLPlayer(p))
+				.filter(p -> players.contains(p.getUniqueId()))
+				.forEach(p -> {
+					rangeGroup.removeRangesByTags(p, tags);
+					rangeGroup.addRanges(p, ranges);
+				});
+	}
 }
