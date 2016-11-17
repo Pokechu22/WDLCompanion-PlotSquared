@@ -35,7 +35,7 @@ public class PlotSquaredPlotsRangeGroupType implements IRangeGroupType<PlotSquar
 			ConfigurationSection config) {
 		OwnershipType type = OwnershipType.match(config.getString("ownershipType", "any"));
 		PlotSquaredPlotsRangeProducer producer = new PlotSquaredPlotsRangeProducer(group,
-				type);
+				type, plugin);
 		plugin.getServer().getPluginManager().registerEvents(producer, plugin);
 		
 		return producer;
